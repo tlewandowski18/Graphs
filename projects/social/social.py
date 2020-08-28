@@ -1,12 +1,20 @@
+from util import Stack, Queue
+
 class User:
     def __init__(self, name):
         self.name = name
+
+import random
 
 class SocialGraph:
     def __init__(self):
         self.last_id = 0
         self.users = {}
         self.friendships = {}
+
+    def __str__(self):
+        for user, value in self.users:
+            return f'{user}: {value}'
 
     def add_friendship(self, user_id, friend_id):
         """
@@ -43,10 +51,19 @@ class SocialGraph:
         self.users = {}
         self.friendships = {}
         # !!!! IMPLEMENT ME
-
+        possible_combos = []
         # Add users
-
+        for user in range(1, num_users + 1):
+            self.add_user(User(user))
+            for friend in range(1, num_users + 1):
+                if user != friend and (user, friend) not in possible_combos and (friend, user) not in possible_combos:
+                    possible_combos.append((user, friend))
+        random.shuffle(possible_combos)
         # Create friendships
+        num_friendships = num_users * avg_friendships // 2
+        for i in range(num_friendships):
+            combo = possible_combos[i]
+            self.add_friendship(combo[0], combo[1])
 
     def get_all_social_paths(self, user_id):
         """
@@ -59,8 +76,27 @@ class SocialGraph:
         """
         visited = {}  # Note that this is a dictionary, not a set
         # !!!! IMPLEMENT ME
-        return visited
+        visited[user_id] = [user_id]
+        queue = Queue()
+        queue.enqueue({
+            'cur_ver': user_id,
+            'path': [user_id],
+        })
+        while queue.size() > 0:
+            cur_item = queue.dequeue()
+            cur_ver = cur_item['cur_ver']
+            cur_path = cur_item['path']
+            for friend in self.friendships[cur_ver]:
+                if friend not in visited.keys():
+                    new_path = list(cur_path)
+                    new_path.append(friend)
+                    visited[friend] = new_path
+                    queue.enqueue({
+                        'cur_ver': friend,
+                        'path': new_path,
+                    })
 
+        return visited
 
 if __name__ == '__main__':
     sg = SocialGraph()
