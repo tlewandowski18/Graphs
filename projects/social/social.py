@@ -21,12 +21,16 @@ class SocialGraph:
         Creates a bi-directional friendship
         """
         if user_id == friend_id:
-            print("WARNING: You cannot be friends with yourself")
+            # print("WARNING: You cannot be friends with yourself")
+            return False
         elif friend_id in self.friendships[user_id] or user_id in self.friendships[friend_id]:
-            print("WARNING: Friendship already exists")
+            # print("WARNING: Friendship already exists")
+            return False
         else:
             self.friendships[user_id].add(friend_id)
             self.friendships[friend_id].add(user_id)
+
+        return True
 
     def add_user(self, name):
         """
@@ -36,6 +40,7 @@ class SocialGraph:
         self.users[self.last_id] = User(name)
         self.friendships[self.last_id] = set()
 
+    #better when num users low but avg_friendships high
     def populate_graph(self, num_users, avg_friendships):
         """
         Takes a number of users and an average number of friendships
@@ -53,17 +58,56 @@ class SocialGraph:
         # !!!! IMPLEMENT ME
         possible_combos = []
         # Add users
-        for user in range(1, num_users + 1):
-            self.add_user(User(user))
-            for friend in range(1, num_users + 1):
-                if user != friend and (user, friend) not in possible_combos and (friend, user) not in possible_combos:
-                    possible_combos.append((user, friend))
+        for i in range(num_users):
+            self.add_user(f'User {i}')
+
+        for user in self.users:
+            for friend in range(user + 1, self.last_id+1):
+               possible_combos.append((user, friend))
         random.shuffle(possible_combos)
         # Create friendships
         num_friendships = num_users * avg_friendships // 2
         for i in range(num_friendships):
             combo = possible_combos[i]
             self.add_friendship(combo[0], combo[1])
+
+    #better when num users high but avg friendships low
+    def populate_graph_2(self, num_users, avg_friendships):
+        """
+        Takes a number of users and an average number of friendships
+        as arguments
+
+        Creates that number of users and a randomly distributed friendships
+        between those users.
+
+        The number of users must be greater than the average number of friendships.
+        """
+        # Reset graph
+        self.last_id = 0
+        self.users = {}
+        self.friendships = {}
+        # !!!! IMPLEMENT ME
+
+        # Add users
+        for i in range(num_users):
+            self.add_user(f'User {i}')
+
+        target_friendships = num_users * avg_friendships
+
+        total_friendships = 0
+        collisions = 0
+
+        while total_friendships < target_friendships:
+            user_id = random.randint(1, self.last_id)
+            friend_id = random.randint(1, self.last_id)
+
+            
+            if self.add_friendship(user_id, friend_id):
+                total_friendships += 2
+            else:
+                collisions += 1
+        
+        print(f"Collisions: {collisions}")
 
     def get_all_social_paths(self, user_id):
         """
@@ -100,7 +144,7 @@ class SocialGraph:
 
 if __name__ == '__main__':
     sg = SocialGraph()
-    sg.populate_graph(10, 2)
-    print(sg.friendships)
-    connections = sg.get_all_social_paths(1)
-    print(connections)
+    sg.populate_graph_2(100000, 4000)
+    # print(sg.friendships)
+    # connections = sg.get_all_social_paths(1)
+    # print(connections)
